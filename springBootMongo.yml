@@ -1,78 +1,29 @@
-apiVersion: v1
-kind: ReplicationController
+apiVersion: apps/v1
+kind: Deployment
 metadata:
-  labels:
-    name: springboot
-  name: spring-controller
+  name: jenkins
 spec:
   replicas: 1
+  selector:
+    matchLabels:
+      app: jenkins
   template:
     metadata:
       labels:
-        name: springboot
+        app: jenkins
     spec:
       containers:
-      - image: vijaybabu358/spring-boot-mongo
-        name: springboot
+      - name: jenkins
+        image: jenkins/jenkins:lts
         ports:
-        - name: springboot
-          containerPort: 8080
----
-#Node Port Service
-apiVersion: v1
-kind: Service
-metadata:
-  labels:
-    name: springboot
-  name: springboot  
-spec:
-  type: Nodeport
-  ports:
-  - port: 8080
-    targetPort: 8080
-  selector:
-    name: springboot
----
-# Mongo host path rc
-apiVersion: apps/v1
-kind: ReplicationController
-metadata:
-  labels:
-  name: mongo
-name: mongo-controller  
-spec:
-    replicas: 1
-    template:
-      metadata:
-        labels:
-          name: mongo
-     spec:
-       containers:
-       - name: mongo
-         image: mongo
-         ports:
-         - name: mongo
-           containerPort: 27017
-           hostport: 27017
-         volumeMounts:
-         - name: mongo-persistance-storage
-           mountPath: /data/db
-       volumes:
-       - name: mongo-persistance-storage
-         hostpath:
-          path: /tmp/backup         
----
-# Mongo Node Port RC
-apiVersion: v1
-kind: Service
-metadata:
-  labels:
-    name: mongo
-  name: mongo
-spec:
-  type: ClusterIP
-  ports:
-  - port: 27017
-    targetPort: 27017
-selector:
-    name: mongo
+          - name: http-port
+            containerPort: 8080
+          - name: jnlp-port
+            containerPort: 50000
+        volumeMounts:
+          - name: jenkins-vol
+            mountPath: /var/jenkins_vol
+      volumes:
+        - name: jenkins-vol
+          emptyDir: {}
+
