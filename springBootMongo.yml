@@ -1,29 +1,25 @@
-apiVersion: apps/v1
-kind: Deployment
+kind: Pod
+apiVersion: v1
 metadata:
-  name: jenkins
+  name: apple-app
+  labels:
+    app: apple
 spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: jenkins
-  template:
-    metadata:
-      labels:
-        app: jenkins
-    spec:
-      containers:
-      - name: jenkins
-        image: jenkins/jenkins:lts
-        ports:
-          - name: http-port
-            containerPort: 8080
-          - name: jnlp-port
-            containerPort: 50000
-        volumeMounts:
-          - name: jenkins-vol
-            mountPath: /var/jenkins_vol
-      volumes:
-        - name: jenkins-vol
-          emptyDir: {}
+  containers:
+    - name: apple-app
+      image: hashicorp/http-echo
+      args:
+        - "-text=apple"
 
+---
+
+kind: Service
+apiVersion: v1
+metadata:
+  name: apple-service
+spec:
+  selector:
+    app: apple
+  ports:
+    - port: 5678 # Default port for image
+    
