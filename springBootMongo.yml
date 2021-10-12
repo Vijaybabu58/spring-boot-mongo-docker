@@ -1,25 +1,78 @@
-kind: Pod
 apiVersion: v1
+kind: ReplicationController
 metadata:
-  name: apple-app
   labels:
-    app: apple
+    name: springboot
+  name: spring-controller
 spec:
-  containers:
-    - name: apple-app
-      image: hashicorp/http-echo
-      args:
-        - "-text=apple"
-
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        name: springboot
+    spec:
+      containers:
+      - image: vijaybabu358/spring-boot-mongo
+        name: springboot
+        ports:
+        - name: springboot
+          containerPort: 8080
 ---
-
-kind: Service
+#Node Port Service
 apiVersion: v1
+kind: Service
 metadata:
-  name: apple-service
+  labels:
+    name: springboot
+  name: springboot  
 spec:
-  selector:
-    app: apple
+  type: Nodeport
   ports:
-    - port: 5678 # Default port for image
-    
+  - port: 8080
+    targetPort: 8080
+  selector:
+    name: springboot
+---
+# Mongo host path rc
+apiVersion: apps/v1
+kind: ReplicationController
+metadata:
+  labels:
+  name: mongo
+name: mongo-controller  
+spec:
+    replicas: 1
+    template:
+      metadata:
+        labels:
+          name: mongo
+     spec:
+       containers:
+       - name: mongo
+         image: mongo
+         ports:
+         - name: mongo
+           containerPort: 27017
+           hostport: 27017
+         volumeMounts:
+         - name: mongo-persistance-storage
+           mountPath: /data/db
+       volumes:
+       - name: mongo-persistance-storage
+         hostpath:
+          path: /tmp/backup         
+---
+# Mongo Node Port RC
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    name: mongo
+  name: mongo
+spec:
+  type: ClusterIP
+  ports:
+  - port: 27017
+    targetPort: 27017
+selector:
+    name: mongo
